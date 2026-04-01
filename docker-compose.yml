@@ -1,13 +1,30 @@
-version: '3.3'
 services:
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: always
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=admin@62.84.183.238.nip.io"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+
   evolution-api:
     image: atendai/evolution-api:latest
     container_name: evolution-api
     restart: always
-    ports:
-      - "8080:8080"
     environment:
-      - SERVER_URL=http://62.84.183.238:8080
+      - SERVER_URL=https://api.62.84.183.238.nip.io
       - AUTHENTICATION_API_KEY=SenhaMestra123!
       - DATABASE_PROVIDER=postgresql
       - DATABASE_CONNECTION_URI=postgresql://postgres:senhadobanco123@postgres:5432/evolution?schema=public
@@ -21,6 +38,12 @@ services:
     depends_on:
       - postgres
       - redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.evo.rule=Host(`api.62.84.183.238.nip.io`)"
+      - "traefik.http.routers.evo.entrypoints=websecure"
+      - "traefik.http.routers.evo.tls.certresolver=letsencrypt"
+      - "traefik.http.services.evo.loadbalancer.server.port=8080"
 
   postgres:
     image: postgres:15
