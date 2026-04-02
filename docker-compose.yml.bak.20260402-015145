@@ -20,7 +20,7 @@ services:
       - "./letsencrypt:/letsencrypt"
 
   evolution-api:
-    image: evolution-api-local:2.3.7
+    image: atendai/evolution-api:latest
     container_name: evolution-api
     restart: always
     environment:
@@ -38,8 +38,6 @@ services:
     depends_on:
       - postgres
       - redis
-    volumes:
-      - evolution_instances:/evolution/instances
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.evo.rule=Host(`api.62.84.183.238.nip.io`)"
@@ -68,4 +66,3 @@ services:
 volumes:
   postgres_data:
   redis_data:
-  evolution_instances:
